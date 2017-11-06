@@ -30,7 +30,25 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  for i in xrange(X.shape[0]):
+    scores = X[i].dot(W)
+    scores -= np.max(scores)
+    l_i = -scores[y[i]]
+    denominator = np.sum(np.exp(scores))
+
+    for c_idx in xrange(W.shape[1]):
+      if c_idx == y[i]:
+        dW[:, c_idx] += (np.exp(scores[c_idx])/denominator - 1)*X[i]
+      else:
+        dW[:, c_idx] += np.exp(scores[c_idx])/denominator*X[i]
+    l_i += np.log(denominator)
+    loss += l_i
+
+  loss /= X.shape[0]
+  loss += reg * np.sum(W*W)
+  dW /= X.shape[0]
+  dW += 2 *reg * W
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -54,7 +72,17 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  scores -= np.max(scores, axis=1)[:,np.newaxis]
+  exp_scores = np.exp(scores)
+
+  n_range = np.arange(X.shape[0])
+  denominators = np.sum(exp_scores, axis=1)
+  scores = exp_scores/denominators[:,np.newaxis]
+  loss = np.sum(np.log(scores[n_range,y]))*-1/X.shape[0] + reg*np.sum(W*W)
+
+  scores[n_range, y] -= 1
+  dW = X.T.dot(scores) / X.shape[0] + 2*reg*W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
